@@ -79,13 +79,18 @@ export function useMockAuth() {
   const updateUser = useCallback(
     (updates: Partial<MockUser>) => {
       try {
-        const updatedUser = { ...user, ...updates }
-        setUser(updatedUser)
-        localStorage.setItem("cmti_session", JSON.stringify(updatedUser))
-        return { success: true }
+        // user is expected to exist here — assert non-null
+        const updatedUser = { ...user!, ...updates };
+
+        // cast to MockUser to satisfy TypeScript (runtime object is fine)
+        setUser(updatedUser as MockUser);
+
+        localStorage.setItem("cmti_session", JSON.stringify(updatedUser));
+        return { success: true };
       } catch (error) {
-        return { success: false, error: "Update failed" }
+        return { success: false, error: (error as Error).message ?? String(error) };
       }
+
     },
     [user],
   )

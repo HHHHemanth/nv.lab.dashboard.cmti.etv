@@ -207,18 +207,14 @@ export function SidebarCollapsed({ onToggle }: { onToggle: (open: boolean) => vo
   }
 
 const iconVariants = {
-  hidden: { opacity: 0, scale: 0, rotateZ: -120 },
+  hidden: { opacity: 0, scale: 0, rotateZ: -180 },
   visible: {
     opacity: 1,
     scale: 1,
     rotateZ: 0,
-    transition: {
-      type: "spring",
-      stiffness: 90,
-      damping: 16,
-    },
+    transition: { type: "spring", stiffness: 150, damping: 15 } as any,
   },
-}
+};
 
 
 

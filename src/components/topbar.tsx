@@ -7,11 +7,14 @@ import { SlEnergy } from "react-icons/sl"
 import CardNav from "./CardNav"
 
 interface TopbarProps {
-  onMenuClick: (open: boolean) => void
-  sidebarOpen: boolean
-  theme: "light" | "dark"
-  onThemeToggle: () => void
-  user?: { name?: string; email?: string } | null
+  onMenuClick: (open: boolean) => void;
+  sidebarOpen: boolean;
+  theme: "light" | "dark";
+  onThemeToggle: () => void;
+  user?: { name?: string; email?: string } | null;
+  // optional additions:
+  onSignOut?: () => void;
+  notificationCount?: number;
 }
 
 // Keep a named export and a default export for compatibility
@@ -20,7 +23,12 @@ export function Topbar({
   sidebarOpen,
   theme,
   onThemeToggle,
+  onSignOut,
+  notificationCount = 0,
+  user = null,
 }: TopbarProps) {
+
+
   const [isMounted, setIsMounted] = useState(false)
 
   useEffect(() => {
@@ -34,40 +42,39 @@ export function Topbar({
   if (!isMounted) return null
 
   // CardNav items (from your example)
-  const items = [
-    {
-      label: "Features",
-      bgColor: "#0D0716",
-      textColor: "#fff",
-      links: [
-        { label: "Energy Monitoring", ariaLabel: "Energy Monitoring" },
-        { label: "Temperature Monitoring", ariaLabel: "Temperature Monitoring" },
-        { label: "Vibration Monitoring", ariaLabel: "Vibration Monitoring" },
+const items = [
+  {
+    label: "Features",
+    bgColor: "#0D0716",
+    textColor: "#fff",
+    links: [
+      { label: "Energy Monitoring", ariaLabel: "Energy Monitoring", href: "/features/energy" },
+      { label: "Temperature Monitoring", ariaLabel: "Temperature Monitoring", href: "/features/temperature" },
+      { label: "Vibration Monitoring", ariaLabel: "Vibration Monitoring", href: "/features/vibration" },
+    ],
+  },
+  {
+    label: "Case Studies",
+    bgColor: "#170D27",
+    textColor: "#fff",
+    links: [
+      { label: "Case 1", ariaLabel: "Case 1", href: "/cases/1" },
+      { label: "Case 2", ariaLabel: "Case 2", href: "/cases/2" },
+      { label: "Case 3", ariaLabel: "Case 3", href: "/cases/3" },
+    ],
+  },
+  {
+    label: "Contact",
+    bgColor: "#271E37",
+    textColor: "#fff",
+    links: [
+      { label: "Phone No.", ariaLabel: "Call us", href: "tel:+9100000000" },
+      { label: "Email", ariaLabel: "Email us", href: "mailto:info@cmti-res.in" },
+      { label: "LinkedIn", ariaLabel: "LinkedIn", href: "https://www.linkedin.com/company/cmti" },
+    ],
+  },
+];
 
-      ],
-    },
-    {
-      label: "Case Studies",
-      bgColor: "#170D27",
-      textColor: "#fff",
-      links: [
-        { label: "Case 1", ariaLabel: "Case 1" },
-        { label: "Case 2", ariaLabel: "Case 2" },
-        { label: "Case 3", ariaLabel: "Case 3" },
-
-      ],
-    },
-    {
-      label: "Contact",
-      bgColor: "#271E37",
-      textColor: "#fff",
-      links: [
-        { label: "Phone No.", ariaLabel: "Call us" },
-        { label: "Email", ariaLabel: "Email us" },
-        { label: "LinkedIn", ariaLabel: "LinkedIn" },
-      ],
-    },
-  ]
 
   return (
 <header className="fixed top-4 bottom-4 left-0 right-0 z-50 pointer-events-none">

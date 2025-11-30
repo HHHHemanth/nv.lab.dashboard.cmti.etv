@@ -41,7 +41,7 @@ function TiltArea({
 }
 
 function TiltCard({ card }: { card: CardData }) {
-  const rootRef = useRef<HTMLArticleElement | null>(null);
+  const rootRef = useRef<HTMLElement | null>(null);
 
   const rotateAmplitude = 10;
   const scaleOnHover = 1.03;
