@@ -44,13 +44,22 @@ export function Topbar({
   // CardNav items (from your example)
   const items = [
     {
-      
+      label: "Home",
+      bgColor: "#f0f0f0",
+      textColor: "#000",
+      links: [],
     },
     {
-      
+      label: "About",
+      bgColor: "#f0f0f0",
+      textColor: "#000",
+      links: [],
     },
     {
-      
+      label: "Contact",
+      bgColor: "#f0f0f0",
+      textColor: "#000",
+      links: [],
     },
   ];
 
