@@ -5,7 +5,7 @@ export async function POST(req: NextRequest) {
   // Extract path from request url: we expect client to call /api/proxy/api/assetpart/...
   const url = new URL(req.url);
   const forwardPath = url.pathname.replace(/^\/api\/proxy/, ""); // keep trailing /api/assetpart/..
-  const backend = process.env.BACKEND_INTERNAL_URL || "http://127.0.0.1:8000";
+  const backend = process.env.BACKEND_INTERNAL_URL || "";
 
   const forwardUrl = backend + forwardPath;
   const body = await req.text();
