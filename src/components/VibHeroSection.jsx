@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import DotGrid from "./DotGrid";
 import DecryptedText from './DecryptedText';
-import { PlugZap, ChartArea, ToolCase } from "lucide-react";
+import { ChartNetwork, ChartArea, ToolCase } from "lucide-react";
 import GlitchText from './GlitchText';
 export default function VibHeroSection({ itemVariants }) {
   return (
@@ -77,7 +77,7 @@ animateOn="both"
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-primary text-sm font-medium mt-4"
               whileHover={{ scale: 1.05 }}
             >
-              <PlugZap className="w-4 h-4"/>
+              <ChartNetwork className="w-4 h-4"/>
               Displacement–Time Monitoring
             </motion.div>
 
