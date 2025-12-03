@@ -120,7 +120,10 @@ export default function ParameterGraph({ onPointSelected, onTokenChange }: {
           // maybe unix ms or s
           if (String(ts).length === 10) ts = Number(ts) * 1000;
           else ts = Number(ts);
-          ts = new Date(ts).toISOString();
+          // Convert UTC → IST (UTC + 5h30m)
+          const ist = new Date(ts + 5.5 * 60 * 60 * 1000);
+          ts = ist.toISOString();
+
         } else {
           // try string
           ts = String(r[0]);
@@ -332,7 +335,7 @@ export default function ParameterGraph({ onPointSelected, onTokenChange }: {
     border: "1px solid rgba(255,255,255,0.02)",
     backdropFilter: "blur(4px)"
   };
-
+  const [authLoading, setAuthLoading] = useState(false);
   return (
     <div style={cardStyle}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 8 }}>
@@ -342,16 +345,18 @@ export default function ParameterGraph({ onPointSelected, onTokenChange }: {
         </div>
         <div style={{ display: "flex", gap: 8 }}>
           <RainbowButton
+            disabled={authLoading} // disable while loading
             onClick={async () => {
               // If already authorized → Unauthorize
-              if (token && token !== "abcdef") {
+              if (token && token !== "abcdef" && !authLoading) {
                 setToken("abcdef");
                 if (onTokenChange) onTokenChange("abcdef");
                 return;
               }
 
-              // Otherwise → Authorize
               try {
+                setAuthLoading(true);   // start loading
+
                 const resp = await fetch(apiUrl("/auth/login"), {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
@@ -364,6 +369,7 @@ export default function ParameterGraph({ onPointSelected, onTokenChange }: {
                 if (!resp.ok) {
                   const text = await resp.text();
                   alert("Authorization failed: " + text);
+                  setAuthLoading(false);
                   return;
                 }
 
@@ -372,6 +378,7 @@ export default function ParameterGraph({ onPointSelected, onTokenChange }: {
 
                 if (!tok) {
                   alert("Token not found in response");
+                  setAuthLoading(false);
                   return;
                 }
 
@@ -380,11 +387,17 @@ export default function ParameterGraph({ onPointSelected, onTokenChange }: {
                 console.log("Successfully authorized!");
               } catch (err: any) {
                 console.log("Authorization error: " + err.message);
+              } finally {
+                setAuthLoading(false);  // stop loading
               }
             }}
             className="px-4 py-2 font-bold text-xl hover:scale-105 transition-transform"
           >
-            {token && token !== "abcdef" ? "Unauthorize" : "Authorize"}
+            {authLoading
+              ? "Authorizing..."              // 🔥 Show loading text
+              : token && token !== "abcdef"
+                ? "Unauthorize"
+                : "Authorize"}
           </RainbowButton>
         </div>
 

@@ -8,6 +8,8 @@ import FooterSection from "../../components/FooterSection";
 import ParameterGraph from "../../components/parameterGraph";
 import TimeDomainGraph from "../../components/timedomainGraph";
 import FFTGraph from "../../components/fftGraph";
+import RealTimeValuesCard from "../../components/RealTimeValuesCard";
+
 
 export default function EnergyPage() {
   // <--- hooks must be INSIDE the component
@@ -65,6 +67,18 @@ export default function EnergyPage() {
           <VibHeroSection itemVariants={itemVariants} />
         </section>
 
+
+<ParameterGraph
+  onPointSelected={(p) => {
+    console.log("[page] onPointSelected received:", p);
+    setSelectedPoint(p);
+  }}
+  onTokenChange={(t) => {
+    console.log("[page] token changed:", t ? t.slice(0, 24) + "..." : "<empty>");
+    setJwtToken(t);
+  }}
+/>
+
         <ParameterGraph onPointSelected={(p) => {
     console.log("[page] onPointSelected received:", p);
     setSelectedPoint(p);
@@ -75,8 +89,14 @@ export default function EnergyPage() {
   }}
 />
 
+
+
+
         <TimeDomainGraph trigger={selectedPoint} token={jwtToken} />
         <FFTGraph trigger={selectedPoint} token={jwtToken} />
+        <section className="mt-4">
+  <RealTimeValuesCard assetId="68bff96662a095f6333cd4ee" />
+</section>
         <FooterSection />
       </motion.div>
     </DashboardLayout>

@@ -259,13 +259,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       </AnimatePresence>
 
       {/* Floating action button to open user panel (for demo) */}
-      <button
-        onClick={() => setUserPanelOpen(!userPanelOpen)}
-        aria-label="Toggle user panel"
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-lg hover:shadow-xl hover:shadow-primary/50 transition-all duration-300 focus-visible-ring flex items-center justify-center font-bold text-lg md:hidden z-30 active:scale-95"
-      >
-        {user?.name?.charAt(0).toUpperCase() || "U"}
-      </button>
+      
     </div>
   )
 }
