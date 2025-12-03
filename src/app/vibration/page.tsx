@@ -13,7 +13,7 @@ import RealTimeValuesCard from "../../components/RealTimeValuesCard";
 
 export default function EnergyPage() {
   // <--- hooks must be INSIDE the component
-  const [selectedPoint, setSelectedPoint] = useState<{ assetId:string; assetPartId:string; axis:string; dateTime:number; type:string } | null>(null);
+  const [selectedPoint, setSelectedPoint] = useState<{ assetId: string; assetPartId: string; axis: string; dateTime: number; type: string } | null>(null);
   const [jwtToken, setJwtToken] = useState<string>(""); // set via auth or paste manually add
 
   const containerVariants = {
@@ -68,35 +68,21 @@ export default function EnergyPage() {
         </section>
 
 
-<ParameterGraph
-  onPointSelected={(p) => {
-    console.log("[page] onPointSelected received:", p);
-    setSelectedPoint(p);
-  }}
-  onTokenChange={(t) => {
-    console.log("[page] token changed:", t ? t.slice(0, 24) + "..." : "<empty>");
-    setJwtToken(t);
-  }}
-/>
-
-        <ParameterGraph onPointSelected={(p) => {
-    console.log("[page] onPointSelected received:", p);
-    setSelectedPoint(p);
-  }}
-  onTokenChange={(t) => {
-    console.log("[page] token changed:", t ? t.slice(0, 24) + "..." : "<empty>");
-    setJwtToken(t);
-  }}
-/>
-
-
-
-
+        <ParameterGraph
+          onPointSelected={(p) => {
+            console.log("[page] onPointSelected received:", p);
+            setSelectedPoint(p);
+          }}
+          onTokenChange={(t) => {
+            console.log("[page] token changed:", t ? t.slice(0, 24) + "..." : "<empty>");
+            setJwtToken(t);
+          }}
+        />
         <TimeDomainGraph trigger={selectedPoint} token={jwtToken} />
         <FFTGraph trigger={selectedPoint} token={jwtToken} />
         <section className="mt-4">
-  <RealTimeValuesCard assetId="68bff96662a095f6333cd4ee" />
-</section>
+          <RealTimeValuesCard assetId="68bff96662a095f6333cd4ee" />
+        </section>
         <FooterSection />
       </motion.div>
     </DashboardLayout>
