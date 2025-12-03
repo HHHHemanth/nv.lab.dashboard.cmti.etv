@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { ShimmerButton } from "@/components/ui/shimmer-button"
 import { Select, InputNumber } from "antd";
 import { apiUrl } from "@/lib/apiBase";
-import type Plotly from 'plotly.js-dist-min';
+import { RainbowButton } from "./rainbow-button";
 const Plot = dynamic(() => import("react-plotly.js"), { ssr: false });
 // const plotListenerRef = useRef<((...args: any[]) => void) | null>(null);
 type AssetOption = {
@@ -77,6 +77,11 @@ export default function ParameterGraph({ onPointSelected, onTokenChange }: {
       alert("Select asset part, axis, parameter and paste JWT token before plotting.");
       return;
     }
+
+    if (!token || token === "abcdef") {
+      alert("Please click on the Authorize button before plotting.");
+      return;
+    }
     setLoading(true);
     try {
       const selected = ASSET_PARTS.find(a => a.assetPartId === assetPart)!;
@@ -87,18 +92,22 @@ export default function ParameterGraph({ onPointSelected, onTokenChange }: {
         days: days,
         type: parameter
       };
-const resp = await fetch(apiUrl("/api/assetpart/ParameterTrends"), {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token.replace(/^Bearer\s+/i, "")}`
-  },
-  body: JSON.stringify(body)
-});
+      const resp = await fetch(apiUrl("/api/assetpart/ParameterTrends"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token.replace(/^Bearer\s+/i, "")}`
+        },
+        body: JSON.stringify(body)
+      });
       if (!resp.ok) {
+        if (resp.status === 401) {
+          throw new Error("Unauthorized. Please click on the Authorize button before plotting.");
+        }
         const text = await resp.text();
         throw new Error(`Status ${resp.status}: ${text}`);
       }
+
       const json = await resp.json();
       // Expected structure (from backend example): { name: "...", value: [ [ts, value], ... ] }
       // adapt to plot format
@@ -332,16 +341,53 @@ const resp = await fetch(apiUrl("/api/assetpart/ParameterTrends"), {
           <div style={headerSubtitleStyle}>Click a point to select timestamp</div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <input
-            placeholder="Paste JWT token here"
-            value={token}
-            onChange={(e) => {
-              setToken(e.target.value);
-              if (onTokenChange) onTokenChange(e.target.value);
+          <RainbowButton
+            onClick={async () => {
+              // If already authorized → Unauthorize
+              if (token && token !== "abcdef") {
+                setToken("abcdef");
+                if (onTokenChange) onTokenChange("abcdef");
+                return;
+              }
+
+              // Otherwise → Authorize
+              try {
+                const resp = await fetch(apiUrl("/auth/login"), {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    email: "cmti@enmaz.com",
+                    password: "Password@123",
+                  }),
+                });
+
+                if (!resp.ok) {
+                  const text = await resp.text();
+                  alert("Authorization failed: " + text);
+                  return;
+                }
+
+                const json = await resp.json();
+                const tok = json?.token;
+
+                if (!tok) {
+                  alert("Token not found in response");
+                  return;
+                }
+
+                setToken(tok);
+                if (onTokenChange) onTokenChange(tok);
+                console.log("Successfully authorized!");
+              } catch (err: any) {
+                console.log("Authorization error: " + err.message);
+              }
             }}
-            style={inputTokenStyle}
-          />
+            className="px-4 py-2 font-bold text-xl hover:scale-105 transition-transform"
+          >
+            {token && token !== "abcdef" ? "Unauthorize" : "Authorize"}
+          </RainbowButton>
         </div>
+
       </div>
 
       <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 12 }}>
@@ -453,7 +499,7 @@ const resp = await fetch(apiUrl("/api/assetpart/ParameterTrends"), {
           />
         ) : (
           <div style={{ padding: 28, color: "rgba(190,210,240,0.6)" }}>
-            Select asset part + axis + parameter + paste JWT, then click Plot to fetch Parameter trends.
+            Click on Authorize and select asset part, axis, parameter, paste JWT, then click Plot to fetch Parameter trends.
           </div>
         )}
       </div>
