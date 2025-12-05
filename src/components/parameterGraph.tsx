@@ -43,6 +43,9 @@ export default function ParameterGraph({ onPointSelected, onTokenChange }: {
   const [token, setToken] = useState<string>("");
   const [dataRows, setDataRows] = useState<{ ts: string; value: number }[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [refX, setRefX] = useState<string | number | Date | null>(null);
+  const [xRange, setXRange] = useState<[string | number | Date, string | number | Date] | null>(null);
+  const [yRange, setYRange] = useState<[number, number] | null>(null);
   const plotRef = useRef<any>(null);
   const plotListenerRef = useRef<((...args: any[]) => void) | null>(null);
 
@@ -147,6 +150,11 @@ export default function ParameterGraph({ onPointSelected, onTokenChange }: {
     if (!dataRows || dataRows.length === 0) return null;
     const x = dataRows.map(r => r.ts);
     const y = dataRows.map(r => r.value);
+    const defaultXRange: [string | number | Date, string | number | Date] = [
+      x[0],
+      x[x.length - 1],
+    ];
+
     return {
       data: [
         {
@@ -172,28 +180,49 @@ export default function ParameterGraph({ onPointSelected, onTokenChange }: {
           type: "date",
           color: "#b4b4b4ff",
           title: { font: { color: "#b4b4b4ff" } },
-
-          // ➜ GRID COLOR
-          gridcolor: "rgba(143, 255, 112, 0.15)",      // soft neon green
-          zerolinecolor: "rgba(143, 255, 112, 0.25)",  // slightly brighter main line
+          gridcolor: "rgba(143, 255, 112, 0.15)",
+          zerolinecolor: "rgba(143, 255, 112, 0.25)",
+          // keep the zoom the user chose
+          range: xRange ?? defaultXRange,
+          autorange: false,
         },
         yaxis: {
           automargin: true,
           color: "#b4b4b4ff",
           title: {
-            text: getUnit(),          // ★ dynamic unit
+            text: getUnit(),
             font: { color: "#b4b4b4ff" }
           },
-
-          // ➜ GRID COLOR
           gridcolor: "rgba(143, 255, 112, 0.15)",
           zerolinecolor: "#b4b4b4",
+          range: yRange ?? undefined,
+          autorange: yRange ? false : true,
         },
 
-        hovermode: "closest",   // 'closest' helps click on nearest point
-        clickmode: "event+select", // ensure Plotly emits events for clicks
+        hovermode: "x",         // hover anywhere along same x
+        hoverdistance: -1,      // accept hover anywhere vertically for that x
+        clickmode: "event+select",
         paper_bgcolor: "transparent",
         plot_bgcolor: "transparent",
+        shapes: refX
+          ? [
+            {
+              type: "line",
+              x0: refX,
+              x1: refX,
+              y0: 0,
+              y1: 1,
+              xref: "x",
+              yref: "paper",
+              line: {
+                color: "rgba(200,200,200,0.6)",
+                width: 2,
+                dash: "dot"
+              }
+            }
+          ]
+          : [],
+
       },
       config: {
         responsive: true,
@@ -203,7 +232,7 @@ export default function ParameterGraph({ onPointSelected, onTokenChange }: {
         showTips: false,
       }
     };
-  }, [dataRows]);
+  }, [dataRows, refX, parameter, xRange, yRange]);
 
 
   // click handler for points -- emits to parent
@@ -219,6 +248,8 @@ export default function ParameterGraph({ onPointSelected, onTokenChange }: {
 
     const pt = pts[0];
     console.log("[ParameterGraph] clicked point object:", pt);
+    setRefX(pt.x as string | number | Date);
+
 
     // pt.x might be ISO string or number (seconds or ms)
     let x = pt.x;
@@ -469,6 +500,44 @@ export default function ParameterGraph({ onPointSelected, onTokenChange }: {
             }}
             style={{ width: "100%", height: "100%" }}
             onClick={handlePointClick}
+            onHover={(event) => {
+              const pt = event?.points?.[0];
+              if (!pt) return;
+              const xVal = pt.x as string | number | Date;
+              setRefX(xVal);
+            }}
+            onUnhover={() => setRefX(null)}
+onRelayout={(e: any) => {
+  // ---- X AXIS ----
+  let xr0 =
+    e["xaxis.range[0]"] ??
+    (Array.isArray(e["xaxis.range"]) ? e["xaxis.range"][0] : undefined);
+  let xr1 =
+    e["xaxis.range[1]"] ??
+    (Array.isArray(e["xaxis.range"]) ? e["xaxis.range"][1] : undefined);
+
+  if (xr0 !== undefined && xr1 !== undefined) {
+    setXRange([xr0, xr1]);
+  } else if (e["xaxis.autorange"]) {
+    // user hit "autoscale" etc.
+    setXRange(null);
+  }
+
+  // ---- Y AXIS (optional, same idea) ----
+  let yr0 =
+    e["yaxis.range[0]"] ??
+    (Array.isArray(e["yaxis.range"]) ? e["yaxis.range"][0] : undefined);
+  let yr1 =
+    e["yaxis.range[1]"] ??
+    (Array.isArray(e["yaxis.range"]) ? e["yaxis.range"][1] : undefined);
+
+  if (yr0 !== undefined && yr1 !== undefined) {
+    setYRange([yr0, yr1]);
+  } else if (e["yaxis.autorange"]) {
+    setYRange(null);
+  }
+}}
+
             onInitialized={(_figure, graphDiv) => {
               try {
                 plotRef.current = graphDiv;
