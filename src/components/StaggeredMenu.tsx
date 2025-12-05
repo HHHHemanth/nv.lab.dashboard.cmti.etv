@@ -381,9 +381,11 @@ export const StaggeredMenu: React.FC<StaggeredMenuProps> = ({
   }, [closeOnClickAway, open, closeMenu]);
 
   return (
-    <div
-      className={`sm-scope z-40 ${isFixed ? 'fixed top-0 left-0 w-screen h-screen overflow-hidden' : 'w-full h-full'}`}
-    >
+  <div
+    className={`sm-scope z-40 ${
+      isFixed ? 'fixed inset-y-0 left-0' : 'w-full h-full'
+    }`}
+  >
       <div
         className={(className ? className + ' ' : '') + 'staggered-menu-wrapper relative w-full h-full z-40'}
         style={accentColor ? ({ ['--sm-accent' as any]: accentColor } as React.CSSProperties) : undefined}
@@ -599,6 +601,10 @@ flex flex-col p-[6em_2em_2em_2em] overflow-y-auto z-10"
 }
 .sm-scope .sm-panel-list[data-numbering] { counter-reset: smItem; }
 .sm-scope .sm-panel-list[data-numbering] .sm-panel-item::after { counter-increment: smItem; content: counter(smItem, decimal-leading-zero); position: absolute; top: 0.1em; right: 3.2em; font-size: 18px; font-weight: 400; color: var(--sm-accent, #ffffff); letter-spacing: 0; pointer-events: none; user-select: none; opacity: var(--sm-num-opacity, 0); }
+.sm-scope {
+  overflow: visible !important;
+}
+
 @media (max-width: 1024px) {
   .sm-scope .staggered-menu-panel { width: 200px; left: 0; right: auto; }
 }

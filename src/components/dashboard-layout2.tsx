@@ -158,8 +158,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       }
     }
 
-    document.addEventListener("mouseover", onDocumentMouseOver)
-    window.addEventListener("mousemove", onDocumentMouseMove)
+    // document.addEventListener("mouseover", onDocumentMouseOver)
+    // window.addEventListener("mousemove", onDocumentMouseMove)
 
     return () => {
       mountedRef.current = false
