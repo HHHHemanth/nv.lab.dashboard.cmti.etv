@@ -108,19 +108,7 @@ export function Topbar({
           </div>
 
           {/* RIGHT: theme toggle only (minimal) */}
-          <div className="flex items-center gap-3 min-w-[120px] justify-end">
-            <button
-              onClick={handleThemeToggle}
-              aria-label="toggle theme"
-              className="p-2 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
-              {theme === "dark" ? (
-                <Moon className="w-5 h-5 text-slate-200" />
-              ) : (
-                <Sun className="w-5 h-5 text-slate-700" />
-              )}
-            </button>
-          </div>
+
         </div>
       </div>
     </header>

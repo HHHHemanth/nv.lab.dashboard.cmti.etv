@@ -8,7 +8,7 @@ import { AnimatePresence } from "framer-motion"
 import { useMockAuth } from "@/hooks/use-mock-auth"
 import { useTheme } from "@/hooks/use-theme"
 import { Topbar } from "./topbar2"
-import { Sidebar, SidebarCollapsed } from "./sidebar"
+import  Sidebar from "./sidebar"
 import { UserDataPanel } from "./user-data-panel"
 import { AnimatedBackground } from "./animated-background"
 
@@ -219,15 +219,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       />
 
       {/* Sidebar (desktop and collapsed) */}
-      <div className="hidden md:block">
-        <AnimatePresence mode="wait">
-          {sidebarOpen ? (
-            <Sidebar key="sidebar-open" isOpen={sidebarOpen} onToggle={handleSidebarToggle} />
-          ) : (
-            <SidebarCollapsed key="sidebar-collapsed" onToggle={handleSidebarToggle} />
-          )}
-        </AnimatePresence>
-      </div>
+<div className="hidden md:block">
+  <Sidebar/>
+</div>
 
       {/* Mobile sidebar overlay */}
       <AnimatePresence>

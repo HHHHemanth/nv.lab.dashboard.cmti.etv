@@ -8,7 +8,7 @@ import { AnimatePresence } from "framer-motion"
 import { useMockAuth } from "@/hooks/use-mock-auth"
 import { useTheme } from "@/hooks/use-theme"
 import { Topbar } from "./topbar"
-import { Sidebar, SidebarCollapsed } from "./sidebar"
+import  Sidebar from "./sidebar"
 import { UserDataPanel } from "./user-data-panel"
 import { AnimatedBackground } from "./animated-background"
 
@@ -189,19 +189,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     )
   }
 
-  // Show auth state
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold text-foreground">CMTI N&V</h1>
-          <p className="text-muted-foreground">Please sign in to continue</p>
-        </div>
-      </div>
-    )
-  }
 
-  const contentMarginLeft = sidebarOpen ? "md:ml-64" : "md:ml-20"
+  const contentMarginLeft = "md:ml-64"; 
 
   return (
     <div className="min-h-screen bg-background">
@@ -219,30 +208,14 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       />
 
       {/* Sidebar (desktop and collapsed) */}
-      <div className="hidden md:block">
-        <AnimatePresence mode="wait">
-          {sidebarOpen ? (
-            <Sidebar key="sidebar-open" isOpen={sidebarOpen} onToggle={handleSidebarToggle} />
-          ) : (
-            <SidebarCollapsed key="sidebar-collapsed" onToggle={handleSidebarToggle} />
-          )}
-        </AnimatePresence>
-      </div>
+<div className="hidden md:block">
+  <Sidebar />
+</div>
 
       {/* Mobile sidebar overlay */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <div
-            key="mobile-overlay"
-            className="md:hidden fixed inset-0 top-16 bg-black/50 z-30"
-            onClick={() => handleSidebarToggle(false)}
-            role="presentation"
-          />
-        )}
-      </AnimatePresence>
 
       {/* Main content */}
-      <main className={`pt-20 pb-8 px-4 md:px-8 transition-all duration-300 ${contentMarginLeft}`} role="main">
+      <main className={`pt-20 pb-8 px-4 md:px-8 transition-all duration-300 role="main"`}>
         {children}
       </main>
 
@@ -259,7 +232,13 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       </AnimatePresence>
 
       {/* Floating action button to open user panel (for demo) */}
-      
+      <button
+        onClick={() => setUserPanelOpen(!userPanelOpen)}
+        aria-label="Toggle user panel"
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-gradient-to-br from-primary to-secondary text-primary-foreground shadow-lg hover:shadow-xl hover:shadow-primary/50 transition-all duration-300 focus-visible-ring flex items-center justify-center font-bold text-lg md:hidden z-30 active:scale-95"
+      >
+        {user?.name?.charAt(0).toUpperCase() || "U"}
+      </button>
     </div>
   )
 }
