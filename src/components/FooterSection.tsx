@@ -8,24 +8,45 @@ const Footer = () => {
         
         {/* LOGOS SIDE BY SIDE */}
         <div className="flex items-center gap-5">
-          <Image
-            src="/logos/logocmti.png"
-            alt="Logo 1"
-            width={100}
-            height={100}
-            className="opacity-50 hover:opacity-100 transition"
-          />
+<div className="relative w-[100px] h-[100px] group">
+  {/* Base white logo */}
+  <Image
+    src="/logos/cmtilogowhite.png"
+    alt="Logo 1 white"
+    fill
+    className="object-contain opacity-50 group-hover:opacity-0 transition-opacity duration-300"
+  />
 
-          <Image
-            src="/logos/MHILogo.png"
-            alt="Logo 2"
-            width={130}
-            height={130}
-            className="opacity-50 hover:opacity-100 transition"
-          />
+  {/* Blue logo on top, hidden until hover */}
+  <Image
+    src="/logos/cmtilogoblue.png"
+    alt="Logo 1 Blue"
+    fill
+    className="object-contain opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+  />
+</div>
+<div className="relative w-[165px] h-[165px] group">
+  {/* Base white logo */}
+  <Image
+    src="/logos/MHILogowhite.png"
+    alt="Logo 2 white"
+    fill
+    className="object-contain opacity-50 group-hover:opacity-0 transition-opacity duration-300"
+  />
+
+  {/* Blue logo on top, hidden until hover */}
+  <Image
+    src="/logos/MHILogogold.png"
+    alt="Logo 2 gold"
+    fill
+    className="object-contain opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+  />
+</div>
+
+
         </div>
 
-        <p className="text-slate-600">© 2025 All rights reserved.</p>
+        <p className="text-slate-500">© 2025 All rights reserved.</p>
       </div>
     </footer>
   );
