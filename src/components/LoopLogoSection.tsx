@@ -152,7 +152,7 @@ export default function LoopLogoSection() {
   ];
 
   return (
-    <section className="w-full py-16 m-60">
+    <section className="w-full py-30 mt-70 mb-50">
       {/* <h2 className="text-3xl font-bold text-white mb-6">Technologies We Use</h2> */}
 
       <div className="relative h-[100px] overflow-hidden rounded-xl">
