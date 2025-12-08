@@ -13,6 +13,8 @@ export default function FFTGraph({
   const [fftData, setFftData] = useState<{ freq: number; value: number }[] | null>(null);
   const [loading, setLoading] = useState(false);
   const graphDivRef = useRef<any>(null);
+  const [refX, setRefX] = useState<number | null>(null);
+
 
   async function fetchFFT(payload: { assetId: string; assetPartId: string; axis: string; dateTime: number; type: string }) {
     setLoading(true);
@@ -50,7 +52,7 @@ export default function FFTGraph({
         return;
       }
 
- 
+
       const url = apiUrl("/api/assetpart/fft");
       console.log("[FFTGraph] fetching", url, "payload:", trigger, "tokenPresent:", !!token);
       setLoading(true);
@@ -103,7 +105,7 @@ export default function FFTGraph({
         title: "FFT",
         margin: { l: 60, r: 30, t: 40, b: 80 },
         xaxis: {
-          title: { text: "Frequency", font: { color: "#b4b4b4" } }, // fixed label
+          title: { text: "Frequency", font: { color: "#b4b4b4" } },
           rangeslider: {
             visible: x && x.length > 0,
             thickness: 0.08,
@@ -114,14 +116,36 @@ export default function FFTGraph({
           zerolinecolor: "rgba(143,255,112,0.18)"
         },
         yaxis: {
-          title: { text: "Amplitude", font: { color: "#b4b4b4" } }, // fixed label
+          title: { text: "Amplitude", font: { color: "#b4b4b4" } },
           automargin: true,
           color: "#b4b4b4",
           gridcolor: "rgba(143,255,112,0.12)",
           zerolinecolor: "rgba(143,255,112,0.18)"
         },
         paper_bgcolor: "transparent",
-        plot_bgcolor: "transparent"
+        plot_bgcolor: "transparent",
+
+        // 🔽 same dotted ref line
+        hovermode: "x",
+        hoverdistance: -1,
+        shapes: refX
+          ? [
+            {
+              type: "line",
+              x0: refX,
+              x1: refX,
+              y0: 0,
+              y1: 1,
+              xref: "x",
+              yref: "paper",
+              line: {
+                color: "rgba(200,200,200,0.6)",
+                width: 2,
+                dash: "dot",
+              },
+            },
+          ]
+          : [],
       },
       config: {
         responsive: true,
@@ -132,7 +156,8 @@ export default function FFTGraph({
         modeBarButtonsToRemove: ["lasso2d", "select2d"],
       }
     };
-  }, [fftData]);
+  }, [fftData, refX]);   // add refX
+
 
   // visual styles (match TimeDomainGraph)
   const cardStyle: React.CSSProperties = {
@@ -190,7 +215,14 @@ export default function FFTGraph({
               style={{ width: "100%", height: "100%" }}
               onInitialized={(_, graphDiv) => { graphDivRef.current = graphDiv; }}
               onUpdate={(_, graphDiv) => { graphDivRef.current = graphDiv; }}
+              onHover={(event) => {
+                const pt = event?.points?.[0];
+                if (!pt) return;
+                setRefX(pt.x as number);
+              }}
+              onUnhover={() => setRefX(null)}
             />
+
           ) : (
             <div style={{ padding: 28, color: "rgba(190,210,240,0.7)" }}>No FFT yet — select a timestamp in Parameter Trend.</div>
           )}
