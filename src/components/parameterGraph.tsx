@@ -211,6 +211,7 @@ export default function ParameterGraph({ onPointSelected, onTokenChange }: {
         setYRange(null);
         return;
       }
+      //attempt2
             // 🔑 REAL-TIME WINDOW CHECK (what you asked for)
       // Get unix cutoff based on current time and selected range (1h / 1w / 1m / 1y)
       const nowMs = Date.now();
