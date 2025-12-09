@@ -14,6 +14,8 @@ export default function FFTGraph({
   const [loading, setLoading] = useState(false);
   const graphDivRef = useRef<any>(null);
   const [refX, setRefX] = useState<number | null>(null);
+  const [xRange, setXRange] = useState<[number, number] | null>(null);
+  const [yRange, setYRange] = useState<[number, number] | null>(null);
 
 
   async function fetchFFT(payload: { assetId: string; assetPartId: string; axis: string; dateTime: number; type: string }) {
@@ -91,6 +93,8 @@ export default function FFTGraph({
     if (!fftData || fftData.length === 0) return null;
     const x = fftData.map(p => p.freq);
     const y = fftData.map(p => p.value);
+    const defaultXRange: [number, number] = [x[0], x[x.length - 1]];
+
     return {
       data: [
         {
@@ -113,7 +117,9 @@ export default function FFTGraph({
           },
           color: "#b4b4b4",
           gridcolor: "rgba(143,255,112,0.15)",
-          zerolinecolor: "rgba(143,255,112,0.18)"
+          zerolinecolor: "rgba(143,255,112,0.18)",
+          range: xRange ?? defaultXRange,
+          autorange: false,
         },
         yaxis: {
           title: { text: "Amplitude", font: { color: "#b4b4b4" } },

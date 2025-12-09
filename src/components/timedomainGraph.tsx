@@ -17,6 +17,8 @@ export default function TimeDomainGraph({
   const [loading, setLoading] = useState(false);
   const plotRef = useRef<any>(null);
   const [refX, setRefX] = useState<number | null>(null);
+  const [xRange, setXRange] = useState<[number, number] | null>(null);
+  const [yRange, setYRange] = useState<[number, number] | null>(null);
 
 
   async function fetchTimeSeries(payload: { assetId: string; assetPartId: string; axis: string; dateTime: number; type: string }) {
@@ -105,6 +107,8 @@ const plot = useMemo(() => {
   if (!dataRows || dataRows.length === 0) return null;
   const xs = dataRows.map(p => p.x);
   const ys = dataRows.map(p => p.y);
+  const defaultXRange: [number, number] = [xs[0], xs[xs.length - 1]];
+
   return {
     data: [
       {
@@ -139,6 +143,8 @@ const plot = useMemo(() => {
       },
       paper_bgcolor: "transparent",
       plot_bgcolor: "transparent",
+      range: yRange ?? undefined,
+      autorange: yRange ? false : true,
 
       // 🔽 same behavior as ParameterGraph
       hovermode: "x",
@@ -171,7 +177,7 @@ const plot = useMemo(() => {
       modeBarButtonsToRemove: ["lasso2d", "select2d"],
     }
   };
-}, [dataRows, trigger?.type, refX]);   // ← add refX to deps
+}, [dataRows, refX, xRange, yRange, trigger?.type]);   // ← add refX to deps
 
 
   // futuristic card styles (copied from parameterGraph)
@@ -229,15 +235,45 @@ const plot = useMemo(() => {
   layout={plot.layout as any}
   config={plot.config as any}
   style={{ width: "100%", height: "100%" }}
-  onInitialized={(_figure, gd) => { plotRef.current = gd; }}
-  onUpdate={(_figure, gd) => { plotRef.current = gd; }}
   onHover={(event) => {
     const pt = event?.points?.[0];
     if (!pt) return;
     setRefX(pt.x as number);
   }}
-  onUnhover={() => setRefX(null)}
+  onUnhover={() => {
+    setRefX(null);      // only remove the ref line
+  }}
+  onRelayout={(e: any) => {
+    // X axis
+    let xr0 =
+      e["xaxis.range[0]"] ??
+      (Array.isArray(e["xaxis.range"]) ? e["xaxis.range"][0] : undefined);
+    let xr1 =
+      e["xaxis.range[1]"] ??
+      (Array.isArray(e["xaxis.range"]) ? e["xaxis.range"][1] : undefined);
+
+    if (xr0 !== undefined && xr1 !== undefined) {
+      setXRange([xr0, xr1]);
+    } else if (e["xaxis.autorange"]) {
+      setXRange(null);
+    }
+
+    // Y axis
+    let yr0 =
+      e["yaxis.range[0]"] ??
+      (Array.isArray(e["yaxis.range"]) ? e["yaxis.range"][0] : undefined);
+    let yr1 =
+      e["yaxis.range[1]"] ??
+      (Array.isArray(e["yaxis.range"]) ? e["yaxis.range"][1] : undefined);
+
+    if (yr0 !== undefined && yr1 !== undefined) {
+      setYRange([yr0, yr1]);
+    } else if (e["yaxis.autorange"]) {
+      setYRange(null);
+    }
+  }}
 />
+
 
           ) : (
             <div style={{ padding: 28, color: "rgba(190,210,240,0.7)" }}>
