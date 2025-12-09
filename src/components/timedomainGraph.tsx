@@ -16,10 +16,6 @@ export default function TimeDomainGraph({
   const [dataRows, setDataRows] = useState<{ x: number; y: number }[] | null>(null);
   const [loading, setLoading] = useState(false);
   const plotRef = useRef<any>(null);
-  const [refX, setRefX] = useState<number | null>(null);
-  const [xRange, setXRange] = useState<[number, number] | null>(null);
-  const [yRange, setYRange] = useState<[number, number] | null>(null);
-
 
   async function fetchTimeSeries(payload: { assetId: string; assetPartId: string; axis: string; dateTime: number; type: string }) {
     setLoading(true);
@@ -103,82 +99,58 @@ export default function TimeDomainGraph({
     return "Sample/Time";
   };
 
-const plot = useMemo(() => {
-  if (!dataRows || dataRows.length === 0) return null;
-  const xs = dataRows.map(p => p.x);
-  const ys = dataRows.map(p => p.y);
-  const defaultXRange: [number, number] = [xs[0], xs[xs.length - 1]];
-
-  return {
-    data: [
-      {
-        x: xs,
-        y: ys,
-        type: "scatter",
-        mode: "lines",
-        line: { width: 1, color: "#8FFF70" },
-        hovertemplate: "%{x}<br>%{y}<extra></extra>"
-      }
-    ],
-    layout: {
-      title: "Time-domain waveform",
-      margin: { l: 60, r: 30, t: 40, b: 80 },
-      xaxis: {
-        title: { text: getXAxisTitle(), font: { color: "#b4b4b4" } },
-        rangeslider: {
-          visible: xs && xs.length > 0,
-          thickness: 0.08,
-          bgcolor: "rgba(255,255,255,0.2)"
+  const plot = useMemo(() => {
+    if (!dataRows || dataRows.length === 0) return null;
+    const xs = dataRows.map(p => p.x);
+    const ys = dataRows.map(p => p.y);
+    return {
+      data: [
+        {
+          x: xs,
+          y: ys,
+          type: "scatter",
+          mode: "lines",
+          line: { width: 1, color: "#8FFF70" }, // neon green line
+          hovertemplate: "%{x}<br>%{y}<extra></extra>"
+        }
+      ],
+      layout: {
+        title: "Time-domain waveform",
+        margin: { l: 60, r: 30, t: 40, b: 80 },
+        xaxis: {
+          title: { text: getXAxisTitle(), font: { color: "#b4b4b4" } },
+          // enable the small navigator / range slider under the plot
+          rangeslider: {
+            visible: xs && xs.length > 0,
+            thickness: 0.08,
+            bgcolor: "rgba(255,255,255,0.2)"
+          },
+          // if your x values are real timestamps (ms), consider:
+          // type: "date"
+          color: "#b4b4b4",
+          gridcolor: "rgba(143,255,112,0.15)",
+          zerolinecolor: "#b4b4b4ff",
         },
-        color: "#b4b4b4",
-        gridcolor: "rgba(143,255,112,0.15)",
-        zerolinecolor: "#b4b4b4ff",
+        yaxis: {
+          title: { text: "Amplitude", font: { color: "#b4b4b4" } },
+          automargin: true,
+          color: "#b4b4b4",
+          gridcolor: "rgba(143,255,112,0.12)",
+          zerolinecolor: "rgba(143,255,112,0.18)",
+        },
+        paper_bgcolor: "transparent",
+        plot_bgcolor: "transparent"
       },
-      yaxis: {
-        title: { text: "Amplitude", font: { color: "#b4b4b4" } },
-        automargin: true,
-        color: "#b4b4b4",
-        gridcolor: "rgba(143,255,112,0.12)",
-        zerolinecolor: "rgba(143,255,112,0.18)",
-      },
-      paper_bgcolor: "transparent",
-      plot_bgcolor: "transparent",
-      range: yRange ?? undefined,
-      autorange: yRange ? false : true,
-
-      // 🔽 same behavior as ParameterGraph
-      hovermode: "x",
-      hoverdistance: -1,
-      shapes: refX
-        ? [
-            {
-              type: "line",
-              x0: refX,
-              x1: refX,
-              y0: 0,
-              y1: 1,
-              xref: "x",
-              yref: "paper",
-              line: {
-                color: "rgba(200,200,200,0.6)",
-                width: 2,
-                dash: "dot",
-              },
-            },
-          ]
-        : [],
-    },
-    config: {
-      responsive: true,
-      displayModeBar: true,
-      displaylogo: false,
-      scrollZoom: true,
-      showTips: false,
-      modeBarButtonsToRemove: ["lasso2d", "select2d"],
-    }
-  };
-}, [dataRows, refX, xRange, yRange, trigger?.type]);   // ← add refX to deps
-
+      config: {
+        responsive: true,
+        displayModeBar: true,
+        displaylogo: false,
+        scrollZoom: true,
+        showTips: false,
+        modeBarButtonsToRemove: ["lasso2d", "select2d"],
+      }
+    };
+  }, [dataRows, trigger?.type]);
 
   // futuristic card styles (copied from parameterGraph)
   const cardStyle: React.CSSProperties = {
@@ -230,51 +202,14 @@ const plot = useMemo(() => {
         <div style={watermarkStyle}>VIB • realtime</div>
         <div style={{ height: "100%" }}>
           {plot ? (
-<Plot
-  data={plot.data as any}
-  layout={plot.layout as any}
-  config={plot.config as any}
-  style={{ width: "100%", height: "100%" }}
-  onHover={(event) => {
-    const pt = event?.points?.[0];
-    if (!pt) return;
-    setRefX(pt.x as number);
-  }}
-  onUnhover={() => {
-    setRefX(null);      // only remove the ref line
-  }}
-  onRelayout={(e: any) => {
-    // X axis
-    let xr0 =
-      e["xaxis.range[0]"] ??
-      (Array.isArray(e["xaxis.range"]) ? e["xaxis.range"][0] : undefined);
-    let xr1 =
-      e["xaxis.range[1]"] ??
-      (Array.isArray(e["xaxis.range"]) ? e["xaxis.range"][1] : undefined);
-
-    if (xr0 !== undefined && xr1 !== undefined) {
-      setXRange([xr0, xr1]);
-    } else if (e["xaxis.autorange"]) {
-      setXRange(null);
-    }
-
-    // Y axis
-    let yr0 =
-      e["yaxis.range[0]"] ??
-      (Array.isArray(e["yaxis.range"]) ? e["yaxis.range"][0] : undefined);
-    let yr1 =
-      e["yaxis.range[1]"] ??
-      (Array.isArray(e["yaxis.range"]) ? e["yaxis.range"][1] : undefined);
-
-    if (yr0 !== undefined && yr1 !== undefined) {
-      setYRange([yr0, yr1]);
-    } else if (e["yaxis.autorange"]) {
-      setYRange(null);
-    }
-  }}
-/>
-
-
+            <Plot
+              data={plot.data as any}
+              layout={plot.layout as any}
+              config={plot.config as any}
+              style={{ width: "100%", height: "100%" }}
+              onInitialized={(_figure, gd) => { plotRef.current = gd; }}
+              onUpdate={(_figure, gd) => { plotRef.current = gd; }}
+            />
           ) : (
             <div style={{ padding: 28, color: "rgba(190,210,240,0.7)" }}>
               No time-domain data yet — select a point in Parameter Trend (and ensure JWT is provided).
