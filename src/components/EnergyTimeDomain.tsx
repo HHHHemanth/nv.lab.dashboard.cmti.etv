@@ -20,7 +20,7 @@ export default function EnergyTimeDomainGraph() {
   const espT0Ref = useRef<number | null>(null);
   const systemT0Ref = useRef<number | null>(null);
 
-  const FASTAPI_URL = "http://192.168.4.10:8000/latest";
+  const FASTAPI_URL = "/api/energy";
 
   // ---------- START ----------
   const startPlotting = () => {
