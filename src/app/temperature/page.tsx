@@ -6,7 +6,7 @@ import { DashboardLayout } from "../../components/dashboard-layout2"
 import TempHeroSection from "../../components/TempHeroSection";
 import FooterSection from "../../components/FooterSection";
 
-export default function EnergyPage() {
+export default function TemperaturePage() {
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {

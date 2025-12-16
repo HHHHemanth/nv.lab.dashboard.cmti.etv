@@ -11,7 +11,7 @@ import FFTGraph from "../../components/fftGraph";
 import RealTimeValuesCard from "../../components/RealTimeValuesCard";
 
 
-export default function EnergyPage() {
+export default function VibrationPage() {
   // <--- hooks must be INSIDE the component
   const [selectedPoint, setSelectedPoint] = useState<{ assetId: string; assetPartId: string; axis: string; dateTime: number; type: string } | null>(null);
   const [jwtToken, setJwtToken] = useState<string>(""); // set via auth or paste manually add

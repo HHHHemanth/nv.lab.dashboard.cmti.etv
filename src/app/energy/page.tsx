@@ -5,6 +5,7 @@ import { motion } from "framer-motion"
 import { DashboardLayout } from "../../components/dashboard-layout2"
 import EngHeroSection from "../../components/EngHeroSection";
 import FooterSection from "../../components/FooterSection";
+import EnergyTimeDomainGraph from "../../components/EnergyTimeDomain";
 
 export default function EnergyPage() {
 const containerVariants = {
@@ -58,9 +59,7 @@ return(
         {/* Hero Section */}
         <EngHeroSection itemVariants={itemVariants} />
           </section>
-    <div>
-        <h1 className="text-3xl font-bold mb-55">Energy Content</h1>
-    </div>
+    <EnergyTimeDomainGraph/>
         <FooterSection/>
     </motion.div>
 
