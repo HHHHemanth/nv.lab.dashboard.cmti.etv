@@ -2,25 +2,30 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
+import { Select } from "antd";
+
+const RATE_OPTIONS = [
+  { label: "10 Hz", value: 10 },
+  { label: "50 Hz", value: 50 },
+  { label: "100 Hz", value: 100 },
+  { label: "500 Hz", value: 500 }
+];
 
 const Plot = dynamic(() => import("react-plotly.js"), { ssr: false });
 
 type Sample = {
-  x: number;
-  v: number;
-  i: number;
-  p: number;
+  x: number;   // aligned timestamp (ms)
+  i: number;   // current (A)
 };
 
 export default function EnergyTimeDomainGraph() {
   const [dataRows, setDataRows] = useState<Sample[]>([]);
   const [plotting, setPlotting] = useState(false);
+  const [rate, setRate] = useState<number>(50); // 🔹 DEFAULT RATE
 
-  const pollRef = useRef<NodeJS.Timeout | null>(null);
   const espT0Ref = useRef<number | null>(null);
   const systemT0Ref = useRef<number | null>(null);
-
-  const FASTAPI_URL = "/api/energy";
+  const wsRef = useRef<WebSocket | null>(null);
 
   // ---------- START ----------
   const startPlotting = () => {
@@ -33,9 +38,9 @@ export default function EnergyTimeDomainGraph() {
   // ---------- PAUSE ----------
   const pausePlotting = () => {
     setPlotting(false);
-    if (pollRef.current) {
-      clearInterval(pollRef.current);
-      pollRef.current = null;
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
     }
   };
 
@@ -47,45 +52,63 @@ export default function EnergyTimeDomainGraph() {
     systemT0Ref.current = null;
   };
 
-  // ---------- FETCH LOOP ----------
+  // ---------- WEBSOCKET LOOP ----------
   useEffect(() => {
     if (!plotting) return;
 
-    pollRef.current = setInterval(async () => {
-      try {
-        const resp = await fetch(FASTAPI_URL);
-        if (!resp.ok) return;
+    const ws = new WebSocket("ws://192.168.4.10:8000/ws");
+    wsRef.current = ws;
 
-        const json = await resp.json();
+    ws.onopen = () => {
+      // 🔹 send selected rate to backend
+      ws.send(JSON.stringify({ rate }));
+    };
 
-        const ts: number = json.timestamp_ms;
-        const v: number = json.voltage_mV;
-        const i: number = json.current_A;
-        const p: number = json.power_VA;
+    ws.onmessage = (event) => {
+      const json = JSON.parse(event.data);
 
-        if (espT0Ref.current === null) {
-          espT0Ref.current = ts;
-          return;
+      const samples = json.samples;
+      if (!Array.isArray(samples)) return;
+
+      setDataRows(prev => {
+        const newRows = [...prev];
+
+        for (const s of samples) {
+          const t_us = s.t_us;
+          const i = s.i;
+
+          if (espT0Ref.current === null) {
+            espT0Ref.current = t_us;
+            continue;
+          }
+
+          if (systemT0Ref.current === null) continue;
+
+          const alignedTime =
+            systemT0Ref.current + (t_us - espT0Ref.current) / 1000.0;
+
+          const lastX = newRows.length
+            ? newRows[newRows.length - 1].x
+            : null;
+
+          if (lastX === null || alignedTime > lastX) {
+            newRows.push({ x: alignedTime, i });
+          }
+
         }
 
-        if (systemT0Ref.current === null) return;
+        return newRows;
+      });
+    };
 
-        const alignedTime =
-          systemT0Ref.current + (ts - espT0Ref.current);
-
-        setDataRows(prev => [
-          ...prev,
-          { x: alignedTime, v, i, p }
-        ]);
-      } catch (err) {
-        console.error("FastAPI fetch error", err);
-      }
-    }, 100);
+    ws.onerror = (err) => {
+      console.error("WebSocket error", err);
+    };
 
     return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
+      ws.close();
     };
-  }, [plotting]);
+  }, [plotting, rate]);
 
   // ---------- PLOT ----------
   const plot = useMemo(() => {
@@ -93,47 +116,20 @@ export default function EnergyTimeDomainGraph() {
 
     return {
       data: [
-        // Voltage
-        {
-          x: dataRows.map(p => p.x),
-          y: dataRows.map(p => p.v),
-          name: "Voltage (mV)",
-          type: "scatter",
-          mode: "lines",
-          line: { width: 1.5, color: "#7df9ff" },
-          hovertemplate:
-            "%{x|%Y-%m-%d %H:%M:%S.%L}<br>Voltage: %{y} mV<extra></extra>"
-        },
-
-        // Current
         {
           x: dataRows.map(p => p.x),
           y: dataRows.map(p => p.i),
           name: "Current (A)",
-          yaxis: "y2",
           type: "scatter",
           mode: "lines",
-          line: { width: 1.2, color: "#ffffff", dash: "longdashdot"  },
+          line: { width: 1.5, color: "#7df9ff" },
           hovertemplate:
             "%{x|%Y-%m-%d %H:%M:%S.%L}<br>Current: %{y} A<extra></extra>"
-        },
-
-        // Power
-        {
-          x: dataRows.map(p => p.x),
-          y: dataRows.map(p => p.p),
-          name: "Power (VA)",
-          yaxis: "y2",
-          type: "scatter",
-          mode: "lines",
-          line: { width: 1.2, color: "#0030C2", dash: "dash" },
-          hovertemplate:
-            "%{x|%Y-%m-%d %H:%M:%S.%L}<br>Power: %{y} VA<extra></extra>"
         }
       ],
       layout: {
-        title: "Voltage / Current / Power vs Time (ESP32)",
-        margin: { l: 60, r: 60, t: 40, b: 80 },
+        title: "Current vs Time (ESP32)",
+        margin: { l: 60, r: 30, t: 40, b: 80 },
         xaxis: {
           title: "Time",
           type: "date",
@@ -144,23 +140,9 @@ export default function EnergyTimeDomainGraph() {
           gridcolor: "rgba(185, 185, 185, 0.16)"
         },
         yaxis: {
-          title: "Voltage (mV)",
+          title: "Current (A)",
           gridcolor: "rgba(185, 185, 185, 0.16)"
         },
-        yaxis2: {
-          overlaying: "y",
-          showgrid: false,
-          showticklabels: false,   // ← hides numbers
-          title: "",               // ← hides title
-          zeroline: false
-        },
-        legend: {
-          orientation: "h",
-          y: -2.0,        // move further down
-          x: 0.5,
-          xanchor: "center"
-        },
-
         paper_bgcolor: "transparent",
         plot_bgcolor: "transparent"
       },
@@ -189,20 +171,29 @@ export default function EnergyTimeDomainGraph() {
         <div>
           <div style={{ fontWeight: 700 }}>Time Domain</div>
           <div style={{ fontSize: 13, opacity: 0.7 }}>
-            Voltage / Current / Power (ESP32 → FastAPI)
+            Current vs Time (ESP32 → FastAPI)
           </div>
         </div>
 
-        <div style={{ display: "flex", gap: 8 }}>
-          <ShimmerButton onClick={startPlotting} className="text-black text-base px-6 py-1 font-bold" background="#ffffffff">
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          {/* 🔹 RATE DROPDOWN */}
+<Select
+  value={rate}
+  onChange={(v) => setRate(v)}
+  options={RATE_OPTIONS}
+  placeholder="Sample Rate"
+  className="futuristic-select"
+  style={{ width: 140 }}
+/>
+          <ShimmerButton onClick={startPlotting} className="text-black text-base px-6 py-1 font-bold" shimmerColor="rgba(0, 0, 0, 1)" background="#ffffffff" >
             Start
           </ShimmerButton>
 
-          <ShimmerButton onClick={pausePlotting} className="text-black text-base px-6 py-1 font-bold" background="#ffffffff">
+          <ShimmerButton onClick={pausePlotting} className="text-black text-base px-6 py-1 font-bold" shimmerColor="rgba(0, 0, 0, 1)" background="#ffffffff" >
             Pause
           </ShimmerButton>
 
-          <ShimmerButton onClick={clearPlotting} className="text-black text-base px-6 py-1 font-bold" background="#ffffffff">
+          <ShimmerButton onClick={clearPlotting} className="text-black text-base px-6 py-1 font-bold" shimmerColor="rgba(0, 0, 0, 1)" background="#ffffffff" >
             Clear
           </ShimmerButton>
         </div>

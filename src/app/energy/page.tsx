@@ -6,6 +6,7 @@ import { DashboardLayout } from "../../components/dashboard-layout2"
 import EngHeroSection from "../../components/EngHeroSection";
 import FooterSection from "../../components/FooterSection";
 import EnergyTimeDomainGraph from "../../components/EnergyTimeDomain";
+import EnergyFFTGraph from "@/components/EnergyFFTGraph";
 
 export default function EnergyPage() {
 const containerVariants = {
@@ -60,6 +61,7 @@ return(
         <EngHeroSection itemVariants={itemVariants} />
           </section>
     <EnergyTimeDomainGraph/>
+    <EnergyFFTGraph/>
         <FooterSection/>
     </motion.div>
 
